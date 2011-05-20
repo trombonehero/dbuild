@@ -2,14 +2,25 @@ all: foo
 
 .PHONY: clean
 
+CC=./dbuild --tool=compiler --bin=/usr/bin/clang
+JUST_CFLAGS=-c -Wall -Werror
+INCPATHS=/usr/local/include,/some/custom/include
+CFLAGS=--flags="${JUST_CFLAGS}" --paths=${INCPATHS}
+
+LD=./dbuild --tool=linker --bin=/usr/bin/clang
+LIBS=m,bz2
+LDPATHS=/usr/local/lib,/some/custom/libdir
+LDFLAGS=--flags="${JUST_LDFLAGS}" --paths=${LDPATHS} --libs=${LIBS}
+
 clean:
-	rm -f foo *.o
+	rm -f foo *.pyc *.o
 
 foo: foo.o bar.o
-	@./dclang --tool='/usr/bin/clang' --inputs=foo.o,bar.o --output=foo --flags='-fno-builtin'
+	${LD} ${LDFLAGS} --inputs=foo.o,bar.o --output=foo
 
 foo.o: foo.c
-	@./dclang --tool='/usr/bin/clang' --inputs=foo.c --output=foo.o --flags='-c -Wall -Werror'
+	${CC} ${CFLAGS} --inputs=foo.c --output=foo.o
 
 bar.o: bar.c
-	@./dclang --tool='/usr/bin/clang' --inputs=bar.c --output=bar.o --flags='-c -Wall -Werror'
+	${CC} ${CFLAGS} --inputs=bar.c --output=bar.o
+
