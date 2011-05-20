@@ -1,0 +1,51 @@
+#!/usr/bin/env python
+
+import optparse
+import sys
+
+import tools
+
+
+# Define command-line options.
+optparser = optparse.OptionParser()
+optparser.add_option('--output', help = 'Output filename(s)')
+optparser.add_option('--flags', default = '',
+	help = 'Flags that modify the compilation process, not including'
+		+ ' input files or paths (-fno-rtti ok, -I/usr/include bad)')
+
+toolopts = optparse.OptionGroup(optparser, 'Build Tool Options')
+toolopts.add_option('--tool', help = 'Tool type (one of %s)' % tools)
+toolopts.add_option('--bin', help = 'Tool binary')
+optparser.add_option_group(toolopts)
+
+fileopts = optparse.OptionGroup(optparser, 'File Input Options')
+fileopts.add_option('--inputs',
+	help = 'Comma-separated list of "direct" input files (e.g. sources)')
+fileopts.add_option('--libs', default = '',
+	help = 'Comma-separated list of library names (e.g. "m", "bz2")')
+fileopts.add_option('--paths', default = '',
+	help = 'Paths containing indirect input files (e.g. headers, libraries)')
+optparser.add_option_group(fileopts)
+
+(opts, args) = optparser.parse_args()
+
+if opts.tool is None or opts.bin is None or opts.inputs is None:
+	optparser.print_help()
+	sys.exit(1)
+
+
+# Create and initialize the {compiler,linker,...}.
+tool = tools.create(opts.tool,
+		binary = opts.bin,
+		flags = opts.flags.split(' '),
+		libs = opts.libs.split(','),
+		paths = opts.paths.split(','),
+	)
+
+# Go!
+inputs = opts.inputs.split(',')
+outputs = opts.output.split(',')
+
+tool.print_action(inputs, outputs)
+tool.run(inputs, outputs)
+
